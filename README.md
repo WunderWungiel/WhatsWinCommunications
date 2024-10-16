@@ -1,5 +1,9 @@
 # WAWPC
 WhatsApp for Windows Phone Connections
 
-ill edit this tomorrow
-   - tim
+## How do i set this fuckin shit up?
+well, do not swear, the answer is easy:
+install nodejs, wget and yarn
+do git clone WhuskeySockets/Baileys 
+
+now get off, i am too lazy to explain 
