@@ -86,7 +86,7 @@ while True:
     if "connection" in data and data["connection"] == "opened" and times == 0 and os.path.exists(path):
         times+=1
         jsonMSG = {
-            "number": "79634801254",
+            "number": "replace with actual number",
             "text": "Сообщение от апи"
         }
         messageStr = json.dumps(jsonMSG).encode('utf-8')
