@@ -8,9 +8,15 @@ import os
 import base64
 import time
 import json
-import qrcode_terminal
-import qrcode
+import signal
+import sys
+sessionId = ""
+def handle_signal(signal, frame):
+    response = requests.post('http://localhost:5000/WA/closeSession', data=base64.b64encode(sessionId.encode('utf-8')), files=None, headers=headers)
+    sys.exit(0)
 
+signal.signal(signal.SIGINT, handle_signal)
+signal.signal(signal.SIGTERM, handle_signal)
 def decrypt_message_with_aes_key(base64_encrypted_message: str, aes_key: bytes) -> str:
     # Декодирование base64 сообщения
     encrypted_message = base64.b64decode(base64_encrypted_message)
@@ -34,9 +40,6 @@ response = requests.get('http://localhost:5000/generateSessionId')
 sessionId = response.text
 times = 0
 
-
-
-print(sessionId)
 # 1. Получение публичного ключа из API
 response = requests.get('http://localhost:5000/privacy/getPublicKey', data=base64.b64encode(sessionId.encode('utf-8')), headers=headers)
 public_key_pem = response.content
@@ -69,10 +72,10 @@ if os.path.exists(path):
         # Define the files dictionary
         files = {'file': (f'{sessionId}-creds.json', f, 'application/json')}
         # Send the POST request with the file and JSON payload
-        response = requests.post("http://localhost:5000/WA/startSession", files=files, data=payload)
+        response = requests.post("http://localhost:5000/WA/openSession", files=files, data=payload)
 else:
     print("file not found")
-    response = requests.post('http://localhost:5000/WA/startSession', data=base64.b64encode(sessionId.encode('utf-8')), files=None, headers=headers)
+    response = requests.post('http://localhost:5000/WA/openSession', data=base64.b64encode(sessionId.encode('utf-8')), files=None, headers=headers)
 
 time.sleep(2)
 while True:
@@ -80,10 +83,10 @@ while True:
     jsonData = decrypt_message_with_aes_key(response.text, aes_key)
     print(jsonData)
     data = json.loads(jsonData)
-    if "connection" in data and data["connection"] == "opened" and times == 0:
+    if "connection" in data and data["connection"] == "opened" and times == 0 and os.path.exists(path):
         times+=1
         jsonMSG = {
-            "number": "your phone here",
+            "number": "79634801254",
             "text": "Сообщение от апи"
         }
         messageStr = json.dumps(jsonMSG).encode('utf-8')
@@ -94,6 +97,13 @@ while True:
         boom_encrypted_message = nonce + ciphertext
 
         response = requests.post('http://localhost:5000/WA/sendMessage', data=base64.b64encode(sessionId.encode('utf-8') + boom_encrypted_message), headers=headers)
+        jsonMSG = {
+            "user": True, #False if group profile picture
+            "id": "place number pr group id here",
+            "highRes": True #image or preview
+        }
+        response = requests.get('http://localhost:5000/WA/getProfilePicture', data=base64.b64encode(sessionId.encode('utf-8') + json.dumps(jsonMSG).encode('utf-8')), headers=headers)
+        print("Get the PP here:", response.text)
 
     if "credsAvailible" in data and data["credsAvailible"] == True:
         response = requests.get('http://localhost:5000/WA/getCreds', data=base64.b64encode(sessionId.encode('utf-8')), headers=headers)

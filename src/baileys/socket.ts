@@ -14,7 +14,7 @@ export const startSock = async (session: string) => {
 
     const store = makeInMemoryStore({ });
     store.readFromFile('./session_stuff/' + session + '_storage.json');
-    setInterval(() => {
+    const intervalId = setInterval(() => {
         store.writeToFile('./session_stuff/' + session + '_storage.json');
     }, 10_000);
 
@@ -41,8 +41,10 @@ export const startSock = async (session: string) => {
                 const { connection, lastDisconnect } = update;
                 if (connection === 'close') {
                     if ((lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut) {
+                        console.log("reopening connection")
                         startSock(session);
                     } else {
+                        clearInterval(intervalId)
                         user!.connection = "closed";
                         user!.why = "logged out";
                     }

@@ -1,10 +1,20 @@
 import { users } from '../types';
 import { startSock } from '../baileys/socket';
-import { encryptMessageWithAesKey, messageToBuffer, decryptMessageWithAesKey} from '../cryptoUtils';
+import { encryptMessageWithAesKey, messageToBuffer, decryptMessageWithAesKey, } from '../cryptoUtils';
 import fs from 'fs';
+import { DisconnectReason } from '@whiskeysockets/baileys';
+import { Boom } from '@hapi/boom'
+
+const removeFiles = (filePaths: string[]) => {
+    try {
+        filePaths.forEach(filePath => {
+            fs.unlinkSync(filePath);
+        });
+    } catch (err) {}
+};
 
 export function setUpWARoutes(app, uploadDisk, uploadMemory) {
-    app.post("/WA/startSession", uploadDisk.single('file'), (req, res) => {
+    app.post("/WA/openSession", uploadDisk.single('file'), (req, res) => {
         const file = req.file;
         let buffer: Buffer;
         if(file) {
@@ -19,6 +29,14 @@ export function setUpWARoutes(app, uploadDisk, uploadMemory) {
         
         startSock(sessionId);
         res.send('sock started')
+    });
+    app.post("/WA/closeSession", (req, res) => {
+        const sessionId: string = messageToBuffer(req.body).toString('utf-8');
+        let user = users.get(sessionId);
+        user!.socket?.end(new Boom('Closed connection', { statusCode: DisconnectReason.loggedOut }))
+        console.log("Socket for", sessionId, "is closed")
+        removeFiles(["./session_stuff/" + sessionId + "-creds.json", "./session_stuff/" + sessionId + "_storage.json"])
+        res.send('socket is closed. Bye-bye!')
     });
 
     app.get('/WA/updates', (req, res) => {
@@ -36,6 +54,17 @@ export function setUpWARoutes(app, uploadDisk, uploadMemory) {
         res.setHeader('Content-Type', 'application/octet-stream');
         const stream = fs.createReadStream("./session_stuff/"+filename);
         stream.pipe(res);
+    });
+    app.get('/WA/getProfilePicture', (req, res) => {
+        const buffer = messageToBuffer(req.body);
+        let sessionId = buffer.subarray(0, 15).toString('utf-8');
+        let json = JSON.parse(buffer.subarray(15, buffer.length).toString('utf-8'));
+        let user = users.get(sessionId);
+        user!.socket?.profilePictureUrl(json.user ? json.id + "@s.whatsapp.net" : json.id + "@g.us", json.highRes ? "image" : "preview").then(result => {
+            res.send(result)
+        }).catch(error => {
+            res.send(error)
+        });
     });
     app.post('/WA/sendMessage', (req, res) => {
         const buffer = messageToBuffer(req.body);
