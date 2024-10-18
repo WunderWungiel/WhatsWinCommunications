@@ -114,4 +114,23 @@ while True:
             print(f'File downloaded successfully as {filename}')
         else:
             print(f'Failed to download file. Status code: {response.status_code}')
+    if 'updates' in data and data['updates'] and times == 1:
+        # Check if '0' element exists and has the right type
+        if '0' in data['updates'] and data['updates']['0']['type'] == 'messages.upsert':
+            # Extract and load the content
+            updates_0_content_str = data['updates']['0']['content']
+            updates_0_content = json.loads(updates_0_content_str)
+            jsonMSG = {
+                "number": "<your number here>",
+                "text": "Quoted message",
+                "quoted": updates_0_content.get('message', {})
+            }
+            messageStr = json.dumps(jsonMSG).encode('utf-8')
+            nonce = os.urandom(12)
+            aesgcm = AESGCM(aes_key)
+            ciphertext = aesgcm.encrypt(nonce, messageStr, None)
+            boom_encrypted_message = nonce + ciphertext
+
+            response = requests.post('http://localhost:5000/WA/sendMessage', data=base64.b64encode(sessionId.encode('utf-8') + boom_encrypted_message), headers=headers)
+            times+=1
     time.sleep(10) 

@@ -71,8 +71,10 @@ export function setUpWARoutes(app, uploadDisk, uploadMemory) {
         let user = users.get(buffer.subarray(0, 15).toString('utf-8'));
         let jsonBuffer: Buffer = buffer.subarray(15, buffer.length)
         let json = JSON.parse(decryptMessageWithAesKey(jsonBuffer, user!.keys.clientKey))
-        user!.socket?.sendMessage(json.number + "@s.whatsapp.net", {text: json.text})
-        console.log("message sent!")
+        
+        user!.socket?.sendMessage(json.number + "@s.whatsapp.net", {text: json.text}, json.quoted ? {quoted: json.quoted} : undefined).then(()=> {
+            console.log("message sent!")
+        });
         res.send("sent sucsessfully")
     });
     app.post('/WA/sendMedia', uploadMemory.single('file'), (req, res) => {
