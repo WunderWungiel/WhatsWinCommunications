@@ -6,6 +6,13 @@ To secure a connection between server and client we use a public keypair, symmet
 
 ## How do i start it up?
 ### Windows
+1) Resolve dependencies:
+- Install [Node.Js](https://nodejs.org/en) and [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable) and git
+- Clone the repo
+- Cd to the repo dir and run:
+-```yarn```
+- ```yarn build:run```
+
 
 The server software that makes WhatsWin possible
 
