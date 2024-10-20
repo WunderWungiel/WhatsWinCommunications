@@ -3,9 +3,8 @@ import { decryptWithPrivateKey, decryptMessageWithAesKey, encryptMessageWithAesK
 import { User, users } from '../types';
 
 export function setUpPrivacyRoutes(app) {
-    app.get('/privacy/getPublicKey', (req, res) => {
+    app.post('/privacy/getPublicKey', (req, res) => {
         const id = messageToBuffer(req.body).toString('utf-8')
-        console.log(id)
         let user: User = new User();
         const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
             modulusLength: 2048,
