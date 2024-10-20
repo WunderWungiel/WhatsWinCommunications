@@ -1,0 +1,6 @@
+services:
+  app:
+    restart: unless-stopped
+    build: .
+    ports:
+      - 8080:5000
