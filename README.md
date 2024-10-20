@@ -8,8 +8,8 @@ To secure a connection between server and client we use a public keypair, symmet
 ### Windows
 1) Resolve dependencies:
 - Install [Node.Js](https://nodejs.org/en) and [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable) and git
-- Clone the repo
-- Cd to the repo dir and run:
+2) Clone the repo
+3) Cd to the repo dir and run:
 -```yarn```
 - ```yarn build:run```
 
